@@ -42,8 +42,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, SoftDeleteModel, TimeStampe
     gender = models.CharField(max_length=255, choices=GENDER_CHOICES)
     birth = models.IntegerField(
         validators=[
-            MinValueValidator(1900),  # 필드의 값이 설정된 최소값 이상
-            MaxValueValidator(2050)  # 필드의 값이 설정된 최대값 이하
+            MinValueValidator(1900, message="Birth year must be 1900 or later"), # 필드의 값이 설정된 최소값 이상
+            MaxValueValidator(2050, message="Birth year must be 2050 or earlier") # 필드의 값이 설정된 최대값 이하
         ])
     username = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, unique=True)
