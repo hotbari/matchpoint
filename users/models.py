@@ -46,37 +46,67 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, SoftDeleteModel, TimeStampe
             MaxValueValidator(2050, message="Birth year must be 2050 or earlier") # 필드의 값이 설정된 최대값 이하
         ])
     username = models.CharField(max_length=255)
-    phone = models.CharField(max_length=255, unique=True)
+    phone = models.CharField(max_length=11, unique=True)
     auth = models.CharField(max_length=255, blank=True, null=True)
-    # 사용자가 클럽에 속하지 않아도 되며, 사용자 입력 폼에서도 클럽 필드를 비워둘 수 있음
+    
+    """
+    relationships
+    """
+    
     club = models.ForeignKey(
-        Club, on_delete=models.DO_NOTHING, blank=True, null=True)
+        Club,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='members') # 사용자가 클럽에 속하지 않아도 되며, 사용자 입력 폼에서도 클럽 필드를 비워둘 수 있음
+    
     team = models.ForeignKey(
-        Team, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='users')
-    tiers = models.ManyToManyField(
-        Tier, related_name='users', blank=True)  # 다대다 관계 형성
-    # 관리자 페이지 접속 가능하게 하는 staff 기능
-    is_staff = models.BooleanField(default=False)
-    # is_active 활용하여, 계정을 비활성화 가능 (유저 삭제 대신 False)
-    is_active = models.BooleanField(default=True)
+        Team,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='members')
+    
+    tier = models.ForeignKey(
+        Tier,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='users')
+    
     image_url = models.ForeignKey(
-        ImageUrl, on_delete=models.DO_NOTHING, blank=True, null=True)
+        ImageUrl,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='users')
+    
     RANKING_CHOICES = (
         ('single', '단식'),
         ('double', '복식'),
         ('team', '팀'),
     )
+
     main_ranking = models.CharField(
         max_length=255,
         choices=RANKING_CHOICES,
         blank=True,
         null=True
     )
+    
+    # 관리자 페이지 접속 가능하게 하는 staff 기능
+    is_staff = models.BooleanField(default=False)
+    
+    # is_active 활용하여, 계정을 비활성화 가능 (유저 삭제 대신 False)
+    is_active = models.BooleanField(default=True)
+    
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'phone'  # USERNAME_FIELD 로 지정된 값을 흔히 말하는 로그인 ID로 사용됨.
+     # USERNAME_FIELD 로 지정된 값을 흔히 말하는 로그인 ID로 사용됨.
+    USERNAME_FIELD = 'phone' 
 
-    REQUIRED_FIELDS = []  # 슈퍼유저 생성시 요구되는 필드 목록 설정
+    # 슈퍼유저 생성시 요구되는 필드 목록 설정
+    REQUIRED_FIELDS = []  
 
     # 티어와 매치타입 정보를 문자열로 반환하는 메소드
     def get_tiers_display(self):
