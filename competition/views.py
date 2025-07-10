@@ -415,7 +415,11 @@ class CompetitionApplyResultView(APIView):
         if competition.match_type.type == 'single':
             # 신청정보가 입금 대기, 참가 대기중, 참가완료인 경우만
             try :
-                applicant_1 = Applicant.objects.get(applicant_info__competition=competition,user=user, applicant_info__status__in=['unpaid','pending_participation','confirmed_participation'])
+                applicant_1 = Applicant.objects.select_related('user').get(
+                    applicant_info__competition=competition,
+                    user=user,
+                    applicant_info__status__in=['unpaid','pending_participation','confirmed_participation']
+                )
             except Applicant.DoesNotExist :
                 return Response({'error':'신청자 정보가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -429,16 +433,20 @@ class CompetitionApplyResultView(APIView):
         # applicant_info fk가 똑같은 유저
         else : 
             try :
-                applicant_1 = Applicant.objects.get(applicant_info__competition=competition,user=user, applicant_info__status__in=['unpaid','pending_participation','confirmed_participation'])
+                applicant_1 = Applicant.objects.select_related('user').get(
+                    applicant_info__competition=competition,
+                    user=user,
+                    applicant_info__status__in=['unpaid','pending_participation','confirmed_participation']
+                )
         
             except Applicant.DoesNotExist :
                 return Response({'error':'신청자 정보가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)            
             find_info = applicant_1.applicant_info
-            applicant_list = Applicant.objects.filter(applicant_info=find_info)
+            applicant_list = Applicant.objects.filter(applicant_info=find_info).select_related('user')
 
             if len(applicant_list) > 1:
 
-                applicant_1,applicant_2 = Applicant.objects.filter(applicant_info=find_info)
+                applicant_1,applicant_2 = applicant_list
                 applicant1_serializer = CompetitionApplicantSerializer(applicant_1)
                 applicant2_serializer = CompetitionApplicantSerializer(applicant_2)
 
@@ -576,7 +584,7 @@ class MyCompetitionListView(APIView):
         # applicant_info status가 취소되지 않은 것들만
         before_list = Competition.objects.filter(
             status='before',
-            id__in=applicant_competitions).order_by('start_date').distinct()
+            id__in=applicant_competitions).order_by('start_date').distinct().prefetch_related('applicants__user')
 
 
         before_my_competitions = MyCompetitionSerializer(before_list, many=True, context={'request': request}).data
@@ -587,7 +595,7 @@ class MyCompetitionListView(APIView):
         during_list = Competition.objects.filter(
             status='during',
             id__in=participant_competitions
-        ).order_by('-start_date').distinct()
+        ).order_by('-start_date').distinct().prefetch_related('applicants__user')
 
         during_my_competitions = MyCompetitionSerializer(during_list, many=True, context={'request': request}).data
 
@@ -595,7 +603,7 @@ class MyCompetitionListView(APIView):
         ended_list = Competition.objects.filter(
             status='ended',
             id__in=participant_competitions
-        ).order_by('-start_date').distinct()
+        ).order_by('-start_date').distinct().prefetch_related('applicants__user')
 
         ended_my_competitions = MyCompetitionSerializer(ended_list, many=True, context={'request': request}).data
 
@@ -605,7 +613,7 @@ class MyCompetitionListView(APIView):
 
         # 신청 가능한 대회 중 시작되지 않은 대회
         not_apply_list = Competition.objects.filter(
-            status='before', tier__in=user_tiers).exclude(id__in=applicant_competitions).order_by('start_date').distinct()
+            status='before', tier__in=user_tiers).exclude(id__in=applicant_competitions).order_by('start_date').distinct().prefetch_related('applicants__user')
 
 
         not_apply_competitions = MyCompetitionSerializer(not_apply_list, many=True, context={'request': request}).data
