@@ -17,8 +17,6 @@ class Competition(TimeStampedModel, SoftDeleteModel):
         ('tournament', '토너먼트'),
         ('league', '리그'),
     )
-
-    id = models.AutoField(primary_key=True)
     # 날짜 인식해서 자동으로 상태변경 로직 필요
     status = models.CharField(max_length=15, choices=STATUS_CHOICES)
     name = models.CharField(max_length=30, blank=True, null=True)
@@ -32,7 +30,7 @@ class Competition(TimeStampedModel, SoftDeleteModel):
     address = models.CharField(max_length=100, blank=True, null=True)
     location = models.CharField(max_length=30, blank=True, null=True)
     code = models.CharField(max_length=100, blank=True)
-    phone = models.CharField(max_length=30, blank=True, null=True)
+    phone = models.CharField(max_length=11, blank=True, null=True)
     fee = models.IntegerField(blank=True, null=True)  # 대회 참가비 변수명 바꿔야할듯
     bank_name = models.CharField(
         db_column='bankName', max_length=30, blank=True, null=True)
